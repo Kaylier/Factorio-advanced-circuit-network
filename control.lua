@@ -15,11 +15,9 @@ local function reset_target_entity(entity)
     return
   end
   if entity.name == "nuclear-reactor" then
-    print("Reset nuclear reactor")
     entity.active = true
   end
   if entity.name == "rocket-silo" then
-    print("Reset rocket silo")
     entity.active = true
   end
 end
@@ -143,11 +141,31 @@ function(event)
     local x = entity.position.x + d[entity.direction][1]
     local y = entity.position.y + d[entity.direction][2]
 
-    local target = entity.surface.find_entities_filtered{position={x,y}, name={"nuclear-reactor", "rocket-silo"}}
+    global.controllers[controller_id].target_position = {x=x,y=y}
+    local target = entity.surface.find_entities_filtered{position={x=x,y=y}, name={"nuclear-reactor", "rocket-silo"}}
     assign_controller(controller_id, target[1])
   end
 
-  --TODO: if entity and potential target, assign it to the controller
+  local lookup = {
+    ["assembling-machine"] = true,
+    ["beacon"] = true,
+    ["furnace"] = true,
+    ["lab"] = true,
+    ["nuclear-reactor"] = true,
+    ["rocket-silo"] = true,
+  }
+  if entity and lookup[entity.name] then
+    local box = entity.bounding_box
+    for id, data in pairs(global.controllers) do
+      if data.target == nil then
+        local x, y = data.target_position.x, data.target_position.y
+        if box.left_top.x < x and x < box.right_bottom.x and
+           box.left_top.y < y and y < box.right_bottom.y then
+           assign_controller(id, entity)
+        end
+      end
+    end
+  end
 
 end)
 
@@ -199,17 +217,17 @@ end)
 
 script.on_event(defines.events.on_entity_cloned,
 function(event)
-  game.print("entity cloned")
+  --game.print("entity cloned")
 end)
 
 script.on_event(defines.events.on_player_setup_blueprint,
 function(event)
-  game.print("blueprint setup")
+  --game.print("blueprint setup")
 end)
 
 script.on_event(defines.events.on_area_cloned,
 function(event)
-  game.print("area cloned")
+  --game.print("area cloned")
 end)
 
 
