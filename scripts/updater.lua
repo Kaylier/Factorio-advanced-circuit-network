@@ -4,9 +4,9 @@ local function update_none(data)
 end
 
 
-local function update_nuclear_reactor(data)
-  assert(data.type == "nuclear-reactor")
-  assert(data.target.name == "nuclear-reactor")
+local function update_reactor(data)
+  assert(data.type == "reactor")
+  assert(data.target.type == "reactor")
   assert(data.control_enabled ~= nil)
   assert(data.control_enabled_cond2 ~= nil)
   assert(data.control_enabled_cond3 ~= nil)
@@ -79,7 +79,7 @@ end
 
 local function update_rocket_silo(data)
   assert(data.type == "rocket-silo")
-  assert(data.target.name == "rocket-silo")
+  assert(data.target.type == "rocket-silo")
   assert(data.control_enabled ~= nil)
   assert(data.control_enabled_cond2 ~= nil)
   assert(data.control_enabled_cond3 ~= nil)
@@ -209,6 +209,6 @@ end
 
 return {
   ["rocket-silo"] = update_rocket_silo,
-  ["nuclear-reactor"] = update_nuclear_reactor,
+  ["reactor"] = update_reactor,
   ["none"] = update_none
 }

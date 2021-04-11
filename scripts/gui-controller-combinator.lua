@@ -80,7 +80,7 @@ local function build_base(screen, data)
     }
     flow.add{
       type = "label",
-      caption = {"gui.attached-to", data.type, {"entity-name." .. data.type}}
+      caption = {"gui.attached-to", data.target.name, {"entity-name." .. data.target.name}}
     }
   end
 
@@ -108,8 +108,8 @@ local function build_base(screen, data)
 end
 
 
-local function build_nuclear_reactor(screen, data)
-  assert(data.type == "nuclear-reactor")
+local function build_reactor(screen, data)
+  assert(data.type == "reactor")
   assert(data.control_enabled ~= nil)
   assert(data.control_enabled_cond2 ~= nil)
   assert(data.control_enabled_cond3 ~= nil)
@@ -449,6 +449,6 @@ end
 
 return {
   ["rocket-silo"] = build_rocket_silo,
-  ["nuclear-reactor"] = build_nuclear_reactor,
+  ["reactor"] = build_reactor,
   ["none"] = build_none
 }

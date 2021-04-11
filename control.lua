@@ -14,10 +14,10 @@ local function reset_target_entity(entity)
   if not entity or not entity.valid then
     return
   end
-  if entity.name == "nuclear-reactor" then
+  if entity.type == "reactor" then
     entity.active = true
   end
-  if entity.name == "rocket-silo" then
+  if entity.type == "rocket-silo" then
     entity.active = true
   end
 end
@@ -74,12 +74,13 @@ local function assign_controller(id, target_entity)
   assert(global.controllers[id])
 
   -- Reset circuit output
-  local controller = global.controllers[id].controller
-  if controller.valid then
-    local circuit_buffer = controller.get_control_behavior()
+  local controller_comb = global.controllers[id].controller
+  if controller_comb.valid then
+    local circuit_buffer = controller_comb.get_control_behavior()
     for idx = 1,circuit_buffer.signals_count do
       circuit_buffer.set_signal(idx, nil)
     end
+    controller_comb.get_control_behavior().enabled = false
   end
 
   if global.controllers[id].target then
@@ -93,8 +94,11 @@ local function assign_controller(id, target_entity)
 
   if target_entity and target_entity.valid then
     local controller = global.controllers[id]
+    if controller_comb.valid then
+      controller_comb.get_control_behavior().enabled = true
+    end
     controller.target = target_entity
-    controller.type = target_entity.name
+    controller.type = target_entity.type
   end
 end
 
@@ -122,8 +126,8 @@ script.on_event({
 function(event)
   local entity = event.created_entity or event.entity
   if entity and entity.name == "controller-combinator" then
-    -- Force the output of the constant combinator (should be useless, but we never know...)
-    entity.get_control_behavior().enabled = true
+    -- Set the constant combinator to disabled (see right info panel)
+    entity.get_control_behavior().enabled = false
     script.register_on_entity_destroyed(entity)
     local controller_id = init_controller(entity)
 
@@ -142,7 +146,7 @@ function(event)
     local y = entity.position.y + d[entity.direction][2]
 
     global.controllers[controller_id].target_position = {x=x,y=y}
-    local target = entity.surface.find_entities_filtered{position={x=x,y=y}, name={"nuclear-reactor", "rocket-silo"}}
+    local target = entity.surface.find_entities_filtered{position={x=x,y=y}, type={"reactor", "rocket-silo"}}
     assign_controller(controller_id, target[1])
   end
 
@@ -151,10 +155,10 @@ function(event)
     ["beacon"] = true,
     ["furnace"] = true,
     ["lab"] = true,
-    ["nuclear-reactor"] = true,
+    ["reactor"] = true,
     ["rocket-silo"] = true,
   }
-  if entity and lookup[entity.name] then
+  if entity and lookup[entity.type] then
     local box = entity.bounding_box
     for id, data in pairs(global.controllers) do
       if data.target == nil then
