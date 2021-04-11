@@ -108,8 +108,14 @@ local function build_base(screen, data)
 end
 
 
-
 local function build_nuclear_reactor(screen, data)
+  assert(data.type == "nuclear-reactor")
+  assert(data.control_enabled ~= nil)
+  assert(data.control_enabled_cond2 ~= nil)
+  assert(data.control_enabled_cond3 ~= nil)
+  assert(data.read_inventory ~= nil)
+  assert(data.read_temperature ~= nil)
+
   local base = build_base(screen, data)
   local main_frame, content_frame = base[1], base[2]
 
@@ -117,20 +123,20 @@ local function build_nuclear_reactor(screen, data)
     type = "checkbox",
     name = "gui-controller-combinator-enable",
     caption = {"gui.enable"},
-    state = data.control_enabled or false
+    state = data.control_enabled
   }
   do
     local subframe = content_frame.add{
       type = "flow",
       name = "gui-controller-combinator-enable-frame",
       style = "player_input_horizontal_flow",
-      visible = data.control_enabled or false
+      visible = data.control_enabled
     }
     subframe.style.vertical_align = "center"
     subframe.add{
       type = "label",
       caption = {"gui.condition"},
-      style = "caption_label"
+      style = "bold_label"
     }
     subframe.add{
       type = "choose-elem-button",
@@ -142,7 +148,7 @@ local function build_nuclear_reactor(screen, data)
       type = "drop-down",
       name = "gui-controller-combinator-enable-cond2",
       items = {">", "<", "=", "≥", "≤", "≠"},
-      selected_index = data.control_enabled_cond2 or 2
+      selected_index = data.control_enabled_cond2
     }.style.minimal_width = 51
     --[[
     subframe.add{
@@ -155,14 +161,14 @@ local function build_nuclear_reactor(screen, data)
     subframe.add{
       type = "textfield",
       name = "gui-controller-combinator-enable-cond3",
-      text = data.control_enabled_cond3 or "0",
+      text = data.control_enabled_cond3,
       numeric = true,
       lose_focus_on_confirm = true
     }
     content_frame.add{
       type = "line",
       name = "gui-controller-combinator-enable-endline",
-      visible = data.control_enabled or false
+      visible = data.control_enabled
     }
   end
 
@@ -170,27 +176,27 @@ local function build_nuclear_reactor(screen, data)
     type = "checkbox",
     name = "gui-controller-combinator-inventory",
     caption = {"gui.read-inventory"},
-    state = data.read_inventory or false
+    state = data.read_inventory
   }
 
   content_frame.add{
     type = "checkbox",
     name = "gui-controller-combinator-temperature",
     caption = {"gui.read-temperature"},
-    state = data.read_temperature or false
+    state = data.read_temperature
   }
   do
     local subframe = content_frame.add{
       type = "flow",
       name = "gui-controller-combinator-temperature-frame",
       style = "player_input_horizontal_flow",
-      visible = data.read_temperature or false
+      visible = data.read_temperature
     }
     subframe.style.vertical_align = "center"
     subframe.add{
       type = "label",
       caption = {"gui.output-signal"},
-      style = "caption_label"
+      style = "bold_label"
     }
     subframe.add{
       type = "choose-elem-button",
@@ -199,11 +205,250 @@ local function build_nuclear_reactor(screen, data)
       signal = data.read_temperature_signal
     }
   end
+
   return main_frame
 end
 
+
+local function build_rocket_silo(screen, data)
+  assert(data.type == "rocket-silo")
+  assert(data.control_enabled ~= nil)
+  assert(data.control_enabled_cond2 ~= nil)
+  assert(data.control_enabled_cond3 ~= nil)
+  assert(data.control_launch ~= nil)
+  assert(data.control_launch_cond2 ~= nil)
+  assert(data.control_launch_cond3 ~= nil)
+  assert(data.read_inventory ~= nil)
+  assert(data.read_rocket_progress ~= nil)
+  assert(data.read_rocket_launch ~= nil)
+  assert(data.read_rocket_launch_mode ~= nil)
+
+  local base = build_base(screen, data)
+  local main_frame, content_frame = base[1], base[2]
+
+  content_frame.add{
+    type = "checkbox",
+    name = "gui-controller-combinator-enable",
+    caption = {"gui.enable"},
+    state = data.control_enabled
+  }
+  do
+    local subframe = content_frame.add{
+      type = "flow",
+      name = "gui-controller-combinator-enable-frame",
+      style = "player_input_horizontal_flow",
+      visible = data.control_enabled
+    }
+    subframe.style.vertical_align = "center"
+    subframe.add{
+      type = "label",
+      caption = {"gui.condition"},
+      style = "bold_label"
+    }
+    subframe.add{
+      type = "choose-elem-button",
+      name = "gui-controller-combinator-enable-cond1",
+      elem_type = "signal",
+      signal = data.control_enabled_cond1
+    }
+    subframe.add{
+      type = "drop-down",
+      name = "gui-controller-combinator-enable-cond2",
+      items = {">", "<", "=", "≥", "≤", "≠"},
+      selected_index = data.control_enabled_cond2
+    }.style.minimal_width = 51
+    --[[
+    subframe.add{
+    type = "choose-elem-button",
+    name = "gui-controller-combinator-enable-cond3",
+    elem_type = "signal",
+    signal = data.control_enabled_cond3
+    }
+    ]]
+    subframe.add{
+      type = "textfield",
+      name = "gui-controller-combinator-enable-cond3",
+      text = data.control_enabled_cond3,
+      numeric = true,
+      lose_focus_on_confirm = true
+    }
+    content_frame.add{
+      type = "line",
+      name = "gui-controller-combinator-enable-endline",
+      visible = data.control_enabled
+    }
+  end
+
+  content_frame.add{
+    type = "checkbox",
+    name = "gui-controller-combinator-launch",
+    caption = {"gui.launch"},
+    state = data.control_launch
+  }
+  do
+    local subframe = content_frame.add{
+      type = "flow",
+      name = "gui-controller-combinator-launch-frame",
+      style = "player_input_horizontal_flow",
+      visible = data.control_launch
+    }
+    subframe.style.vertical_align = "center"
+    subframe.add{
+      type = "label",
+      caption = {"gui.condition"},
+      style = "bold_label"
+    }
+    subframe.add{
+      type = "choose-elem-button",
+      name = "gui-controller-combinator-launch-cond1",
+      elem_type = "signal",
+      signal = data.control_launch_cond1
+    }
+    subframe.add{
+      type = "drop-down",
+      name = "gui-controller-combinator-launch-cond2",
+      items = {">", "<", "=", "≥", "≤", "≠"},
+      selected_index = data.control_launch_cond2
+    }.style.minimal_width = 51
+    --[[
+    subframe.add{
+    type = "choose-elem-button",
+    name = "gui-controller-combinator-launch-cond3",
+    elem_type = "signal",
+    signal = data.control_launch_cond3
+    }
+    ]]
+    subframe.add{
+      type = "textfield",
+      name = "gui-controller-combinator-launch-cond3",
+      text = data.control_launch_cond3,
+      numeric = true,
+      lose_focus_on_confirm = true
+    }
+    content_frame.add{
+      type = "line",
+      name = "gui-controller-combinator-launch-endline",
+      visible = data.control_launch
+    }
+  end
+
+
+  content_frame.add{
+    type = "checkbox",
+    name = "gui-controller-combinator-inventory",
+    caption = {"gui.read-inventory"},
+    state = data.read_inventory
+  }
+
+  content_frame.add{
+    type = "checkbox",
+    name = "gui-controller-combinator-rocket-progress",
+    caption = {"gui.read-rocket-progress"},
+    state = data.read_rocket_progress
+  }
+  do
+    local subframe = content_frame.add{
+      type = "flow",
+      name = "gui-controller-combinator-rocket-progress-frame",
+      style = "player_input_horizontal_flow",
+      visible = data.read_rocket_progress
+    }
+    subframe.style.vertical_align = "center"
+    subframe.add{
+      type = "label",
+      caption = {"gui.output-signal"},
+      style = "bold_label"
+    }
+    subframe.add{
+      type = "choose-elem-button",
+      name = "gui-controller-combinator-rocket-progress-signal",
+      elem_type = "signal",
+      signal = data.read_rocket_progress_signal
+    }
+    content_frame.add{
+      type = "line",
+      name = "gui-controller-combinator-rocket-progress-endline",
+      visible = data.read_rocket_progress
+    }
+  end
+
+  content_frame.add{
+    type = "checkbox",
+    name = "gui-controller-combinator-rocket-launch",
+    caption = {"gui.read-rocket-launch"},
+    state = data.read_rocket_launch
+  }
+  do
+    local subframe = content_frame.add{
+      type = "flow",
+      name = "gui-controller-combinator-rocket-launch-frame",
+      style = "player_input_horizontal_flow",
+      visible = data.read_rocket_launch
+    }
+    subframe.style.vertical_align = "center"
+    subframe.add{
+      type = "label",
+      caption = {"gui.output-signal"},
+      style = "bold_label"
+    }
+    subframe.add{
+      type = "choose-elem-button",
+      name = "gui-controller-combinator-rocket-launch-signal",
+      elem_type = "signal",
+      signal = data.read_rocket_launch_signal
+    }
+    local bulletframe = subframe.add{
+      type = "flow",
+      direction = "vertical"
+    }
+    bulletframe.add{
+      type = "radiobutton",
+      name = "gui-controller-combinator-rocket-launch-one",
+      caption = {"gui-decider.one"},
+      tooltip = {"gui.one-mode-description"},
+      state = data.read_rocket_launch_output_mode
+    }
+    bulletframe.add{
+      type = "radiobutton",
+      name = "gui-controller-combinator-rocket-launch-count",
+      caption = {"gui.count-mode"},
+      tooltip = {"gui.count-mode-description"},
+      state = not data.read_rocket_launch_output_mode
+    }
+    local subframe2 = content_frame.add{
+      type = "flow",
+      name = "gui-controller-combinator-rocket-launch-frame2",
+      style = "player_input_horizontal_flow",
+      visible = data.read_rocket_launch
+    }
+    subframe2.style.vertical_align = "center"
+    subframe2.add{
+      type = "label",
+      caption = {"gui.output-mode"},
+      style = "bold_label"
+    }
+    subframe2.add{
+      type = "radiobutton",
+      name = "gui-controller-combinator-rocket-launch-unique",
+      caption = {"gui-control-behavior-modes-guis.pulse-mode"},
+      tooltip = {"gui.pulse-mode-description"},
+      state = data.read_rocket_launch_mode
+    }
+    subframe2.add{
+      type = "radiobutton",
+      name = "gui-controller-combinator-rocket-launch-hold",
+      caption = {"gui-control-behavior-modes-guis.hold-mode"},
+      tooltip = {"gui.hold-mode-description"},
+      state = not data.read_rocket_launch_mode
+    }
+  end
+
+  return main_frame
+end
+
+
 return {
-  --["rocket-silo"] = build_controller_combinator_gui,
+  ["rocket-silo"] = build_rocket_silo,
   ["nuclear-reactor"] = build_nuclear_reactor,
   ["none"] = build_none
 }

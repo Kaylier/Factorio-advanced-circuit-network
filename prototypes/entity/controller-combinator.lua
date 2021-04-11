@@ -43,7 +43,7 @@ data:extend({
     max_health = 120,
 
     --- Prototype/ConstantCombinator
-    item_slot_count = 3, -- fuel, burnt and temperature
+    item_slot_count = 32, -- Should be enough
     activity_led_light = {
       intensity = 0,
       size = 1,

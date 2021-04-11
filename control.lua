@@ -44,6 +44,24 @@ local function init_controller(entity)
     controller = entity,
     type = "none",
     target = nil,
+    control_enabled = false,
+    control_enabled_cond1 = nil,
+    control_enabled_cond2 = 2,
+    control_enabled_cond3 = "0",
+    control_launch = false,
+    control_launch_cond1 = { type = "item", name = "satellite"},
+    control_launch_cond2 = 1,
+    control_launch_cond3 = "0",
+    read_inventory = false,
+    read_temperature = false,
+    read_temperature_signal = {type = "virtual", name = "signal-T"},
+    read_rocket_progress = false,
+    read_rocket_progress_signal = { type = "item", name = "rocket-part"},
+    read_rocket_launch = false,
+    read_rocket_launch_signal = {type = "virtual", name = "signal-L"},
+    read_rocket_launch_mode = true, -- true for unique, false for hold
+    read_rocket_launch_state = false, -- set by launch events
+    read_rocket_launch_output_mode = true, -- true for 1, false for launch count
   }
   return id
 end
@@ -56,6 +74,15 @@ local function assign_controller(id, target_entity)
   -- If target_entity is nil, unassign the controller
   ---
   assert(global.controllers[id])
+
+  -- Reset circuit output
+  local controller = global.controllers[id].controller
+  if controller.valid then
+    local circuit_buffer = controller.get_control_behavior()
+    for idx = 1,circuit_buffer.signals_count do
+      circuit_buffer.set_signal(idx, nil)
+    end
+  end
 
   if global.controllers[id].target then
     local old_target = global.controllers[id].target
@@ -202,7 +229,6 @@ function(event)
   end
 end)
 
-
 script.on_event(defines.events.on_gui_closed,
 function(event)
   if event.element and event.element.name == "gui-controller-combinator" then
@@ -226,6 +252,30 @@ function(event)
   elseif event.element.name == "gui-controller-combinator-temperature" then
     global.controllers[opened_controller_id].read_temperature = event.element.state
     event.element.parent["gui-controller-combinator-temperature-frame"].visible = event.element.state
+  elseif event.element.name == "gui-controller-combinator-rocket-progress" then
+    global.controllers[opened_controller_id].read_rocket_progress = event.element.state
+    event.element.parent["gui-controller-combinator-rocket-progress-frame"].visible = event.element.state
+    event.element.parent["gui-controller-combinator-rocket-progress-endline"].visible = event.element.state
+  elseif event.element.name == "gui-controller-combinator-launch" then
+    global.controllers[opened_controller_id].control_launch = event.element.state
+    event.element.parent["gui-controller-combinator-launch-frame"].visible = event.element.state
+    event.element.parent["gui-controller-combinator-launch-endline"].visible = event.element.state
+  elseif event.element.name == "gui-controller-combinator-rocket-launch" then
+    global.controllers[opened_controller_id].read_rocket_launch = event.element.state
+    event.element.parent["gui-controller-combinator-rocket-launch-frame"].visible = event.element.state
+    event.element.parent["gui-controller-combinator-rocket-launch-frame2"].visible = event.element.state
+  elseif event.element.name == "gui-controller-combinator-rocket-launch-unique" then
+    global.controllers[opened_controller_id].read_rocket_launch_mode = event.element.state
+    event.element.parent["gui-controller-combinator-rocket-launch-hold"].state = not event.element.state
+  elseif event.element.name == "gui-controller-combinator-rocket-launch-hold" then
+    global.controllers[opened_controller_id].read_rocket_launch_mode = not event.element.state
+    event.element.parent["gui-controller-combinator-rocket-launch-unique"].state = not event.element.state
+  elseif event.element.name == "gui-controller-combinator-rocket-launch-one" then
+    global.controllers[opened_controller_id].read_rocket_launch_output_mode = event.element.state
+    event.element.parent["gui-controller-combinator-rocket-launch-count"].state = not event.element.state
+  elseif event.element.name == "gui-controller-combinator-rocket-launch-count" then
+    global.controllers[opened_controller_id].read_rocket_launch_output_mode = not event.element.state
+    event.element.parent["gui-controller-combinator-rocket-launch-one"].state = not event.element.state
   end
 end)
 
@@ -241,9 +291,6 @@ function(event)
   ---
   -- textfield
   ---
-  if event.element.name == "gui-controller-combinator-enable-cond3" then
-    global.controllers[opened_controller_id].control_enabled_cond3 = event.element.text
-  end
 end)
 
 script.on_event(defines.events.on_gui_elem_changed,
@@ -255,10 +302,18 @@ function(event)
     global.controllers[opened_controller_id].control_enabled_cond1 = event.element.elem_value
   elseif event.element.name == "gui-controller-combinator-temperature-signal" then
     global.controllers[opened_controller_id].read_temperature_signal = event.element.elem_value
+  elseif event.element.name == "gui-controller-combinator-rocket-progress-signal" then
+    global.controllers[opened_controller_id].read_rocket_progress_signal = event.element.elem_value
+  elseif event.element.name == "gui-controller-combinator-launch-cond1" then
+    global.controllers[opened_controller_id].control_launch_cond1 = event.element.elem_value
+  elseif event.element.name == "gui-controller-combinator-rocket-launch-signal" then
+    global.controllers[opened_controller_id].read_rocket_launch_signal = event.element.elem_value
   end
   --[[
-  if event.element.name == "gui-controller-combinator-enable-cond3" then
+  elseif event.element.name == "gui-controller-combinator-enable-cond3" then
     global.controllers[opened_controller_id].control_enabled_cond3 = event.element.signal
+  elseif event.element.name == "gui-controller-combinator-launch-cond3" then
+    global.controllers[opened_controller_id].control_launch_cond3 = event.element.signal
   end
   ]]
 end)
@@ -277,6 +332,8 @@ function(event)
   ---
   if event.element.name == "gui-controller-combinator-enable-cond2" then
     global.controllers[opened_controller_id].control_enabled_cond2 = event.element.selected_index
+  elseif event.element.name == "gui-controller-combinator-launch-cond2" then
+    global.controllers[opened_controller_id].control_launch_cond2 = event.element.selected_index
   end
 end)
 
@@ -292,6 +349,11 @@ function(event)
   ---
   -- textfield and text-box
   ---
+  if event.element.name == "gui-controller-combinator-enable-cond3" then
+    global.controllers[opened_controller_id].control_enabled_cond3 = event.element.text
+  elseif event.element.name == "gui-controller-combinator-launch-cond3" then
+    global.controllers[opened_controller_id].control_launch_cond3 = event.element.text
+  end
 end)
 
 script.on_event(defines.events.on_gui_value_changed,
@@ -301,4 +363,22 @@ function(event)
   ---
 end)
 
+
+script.on_event(defines.events.on_rocket_launch_ordered,
+function(event)
+  for id, data in pairs(global.controllers) do
+    if data.target == event.rocket_silo then
+      data.read_rocket_launch_state = true
+    end
+  end
+end)
+
+script.on_event(defines.events.on_rocket_launched,
+function(event)
+  for id, data in pairs(global.controllers) do
+    if data.target and data.target.unit_number == event.rocket_silo.unit_number then
+      data.read_rocket_launch_state = false
+    end
+  end
+end)
 
