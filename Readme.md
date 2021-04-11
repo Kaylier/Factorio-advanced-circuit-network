@@ -6,6 +6,45 @@ When a controller combinator is placed facing a machine, it allow the user to co
 Note: if several controller are on the same machine, only one effectively control it.
 
 ## Description
+### Assembling machines
+Concerns: assembling machine 1/2/3, Oil refinery, Chemical plant and Centrifuge.
+
+Possible output signal:
+- Items in input, output and module slots
+- Recipe ingredients
+- Recipe output (if random, returns the average output rounded)
+
+Possible control options:
+- Disable crafting
+- Set recipe (recipe signal? spill items?)
+
+### Beacons
+Possible output signal:
+- Items in module slots
+
+Possible control options:
+- Disable
+
+### Furnaces
+Possible output signal:
+- Items in input, output and module slots
+- Recipe ingredient
+- Recipe output (if random, returns the average output rounded)
+
+Possible control options:
+- Disable smelting
+
+### Labs
+Possible output signal:
+- Items in input and module slots
+- Technology science pack requirement
+- Technology time requirement
+- Technology progress
+- Pulse when a technology is completed
+
+Possible control options:
+- Disable
+
 ### Nuclear reactor
 Possible output signal:
 - Items in fuel and burnt slots

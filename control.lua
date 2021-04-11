@@ -14,6 +14,18 @@ local function reset_target_entity(entity)
   if not entity or not entity.valid then
     return
   end
+  if entity.type == "assembling-machine" then
+    entity.active = true
+  end
+  if entity.type == "beacon" then
+    entity.active = true
+  end
+  if entity.type == "furnace" then
+    entity.active = true
+  end
+  if entity.type == "lab" then
+    entity.active = true
+  end
   if entity.type == "reactor" then
     entity.active = true
   end
@@ -146,7 +158,7 @@ function(event)
     local y = entity.position.y + d[entity.direction][2]
 
     global.controllers[controller_id].target_position = {x=x,y=y}
-    local target = entity.surface.find_entities_filtered{position={x=x,y=y}, type={"reactor", "rocket-silo"}}
+    local target = entity.surface.find_entities_filtered{position={x=x,y=y}, type={"assembling-machine", "beacon", "furnace", "lab", "reactor", "rocket-silo"}}
     assign_controller(controller_id, target[1])
   end
 

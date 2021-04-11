@@ -108,6 +108,128 @@ local function build_base(screen, data)
 end
 
 
+local function build_assembling_machine(screen, data)
+  assert(data.type == "assembling-machine")
+  assert(data.control_enabled ~= nil)
+  assert(data.control_enabled_cond2 ~= nil)
+  assert(data.control_enabled_cond3 ~= nil)
+  assert(data.read_inventory ~= nil)
+
+  local base = build_base(screen, data)
+  local main_frame, content_frame = base[1], base[2]
+
+  -- TODO
+
+  return main_frame
+end
+
+
+local function build_beacon(screen, data)
+  assert(data.type == "beacon")
+  assert(data.control_enabled ~= nil)
+  assert(data.control_enabled_cond2 ~= nil)
+  assert(data.control_enabled_cond3 ~= nil)
+  assert(data.read_inventory ~= nil)
+
+  local base = build_base(screen, data)
+  local main_frame, content_frame = base[1], base[2]
+
+  content_frame.add{
+    type = "checkbox",
+    name = "gui-controller-combinator-enable",
+    caption = {"gui.enable"},
+    state = data.control_enabled
+  }
+  do
+    local subframe = content_frame.add{
+      type = "flow",
+      name = "gui-controller-combinator-enable-frame",
+      style = "player_input_horizontal_flow",
+      visible = data.control_enabled
+    }
+    subframe.style.vertical_align = "center"
+    subframe.add{
+      type = "label",
+      caption = {"gui.condition"},
+      style = "bold_label"
+    }
+    subframe.add{
+      type = "choose-elem-button",
+      name = "gui-controller-combinator-enable-cond1",
+      elem_type = "signal",
+      signal = data.control_enabled_cond1
+    }
+    subframe.add{
+      type = "drop-down",
+      name = "gui-controller-combinator-enable-cond2",
+      items = {">", "<", "=", "≥", "≤", "≠"},
+      selected_index = data.control_enabled_cond2
+    }.style.minimal_width = 51
+    --[[
+    subframe.add{
+    type = "choose-elem-button",
+    name = "gui-controller-combinator-enable-cond3",
+    elem_type = "signal",
+    signal = data.control_enabled_cond3
+    }
+    ]]
+    subframe.add{
+      type = "textfield",
+      name = "gui-controller-combinator-enable-cond3",
+      text = data.control_enabled_cond3,
+      numeric = true,
+      lose_focus_on_confirm = true
+    }
+    content_frame.add{
+      type = "line",
+      name = "gui-controller-combinator-enable-endline",
+      visible = data.control_enabled
+    }
+  end
+
+  content_frame.add{
+    type = "checkbox",
+    name = "gui-controller-combinator-inventory",
+    caption = {"gui.read-inventory"},
+    state = data.read_inventory
+  }
+
+  return main_frame
+end
+
+
+local function build_furnace(screen, data)
+  assert(data.type == "furnace")
+  assert(data.control_enabled ~= nil)
+  assert(data.control_enabled_cond2 ~= nil)
+  assert(data.control_enabled_cond3 ~= nil)
+  assert(data.read_inventory ~= nil)
+
+  local base = build_base(screen, data)
+  local main_frame, content_frame = base[1], base[2]
+
+  -- TODO
+
+  return main_frame
+end
+
+
+local function build_lab(screen, data)
+  assert(data.type == "lab")
+  assert(data.control_enabled ~= nil)
+  assert(data.control_enabled_cond2 ~= nil)
+  assert(data.control_enabled_cond3 ~= nil)
+  assert(data.read_inventory ~= nil)
+
+  local base = build_base(screen, data)
+  local main_frame, content_frame = base[1], base[2]
+
+  -- TODO
+
+  return main_frame
+end
+
+
 local function build_reactor(screen, data)
   assert(data.type == "reactor")
   assert(data.control_enabled ~= nil)
@@ -448,7 +570,12 @@ end
 
 
 return {
+  ["assembling-machine"] = build_assembling_machine,
+  ["beacon"] = build_beacon,
+  ["furnace"] = build_furnace,
+  ["lab"] = build_lab,
   ["rocket-silo"] = build_rocket_silo,
   ["reactor"] = build_reactor,
   ["none"] = build_none
 }
+

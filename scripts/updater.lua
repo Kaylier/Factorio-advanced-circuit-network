@@ -4,6 +4,68 @@ local function update_none(data)
 end
 
 
+local function update_beacon(data)
+  assert(data.type == "beacon")
+  assert(data.target.type == "beacon")
+  assert(data.control_enabled ~= nil)
+  assert(data.control_enabled_cond2 ~= nil)
+  assert(data.control_enabled_cond3 ~= nil)
+  assert(data.read_inventory ~= nil)
+
+  -- circuit output reservations:
+  -- 1+: inventory
+
+  -- Reset circuit output
+  local circuit_buffer = data.controller.get_control_behavior()
+  for idx = 1,circuit_buffer.signals_count do
+    circuit_buffer.set_signal(idx, nil)
+  end
+
+  if data.read_inventory then
+    local idx = 1
+    local inventory = data.target.get_inventory(defines.inventory.beacon_modules)
+    if inventory then
+      local content = inventory.get_contents()
+      for k,v in pairs(content) do
+        circuit_buffer.set_signal(idx, {signal = {type = "item", name = k}, count = v})
+        idx = idx + 1
+      end
+    end
+  end
+
+  local res = true
+  if data.control_enabled then
+    local cond1 = 0
+    local cond2 = 2
+    local cond3 = 0
+    if data.control_enabled_cond1 then
+      cond1 = data.controller.get_merged_signal(data.control_enabled_cond1)
+    end
+    if data.control_enabled_cond2 then
+      cond2 = data.control_enabled_cond2
+    end
+    if data.control_enabled_cond3 then
+      cond3 = tonumber(data.control_enabled_cond3)
+    end
+    if cond2 == 1 then
+      res = (cond1 > cond3)
+    elseif cond2 == 2 then
+      res = (cond1 < cond3)
+    elseif cond2 == 3 then
+      res = (cond1 == cond3)
+    elseif cond2 == 4 then
+      res = (cond1 >= cond3)
+    elseif cond2 == 5 then
+      res = (cond1 <= cond3)
+    elseif cond2 == 6 then
+      res = (cond1 ~= cond3)
+    end
+  end
+  data.target.active = res
+
+end
+
+
 local function update_reactor(data)
   assert(data.type == "reactor")
   assert(data.target.type == "reactor")
@@ -203,12 +265,16 @@ local function update_rocket_silo(data)
       data.target.launch_rocket()
     end
   end
-
 end
 
 
 return {
+  ["assembling-machine"] = update_none,
+  ["beacon"] = update_beacon,
+  ["furnace"] = update_none,
+  ["lab"] = update_none,
   ["rocket-silo"] = update_rocket_silo,
   ["reactor"] = update_reactor,
   ["none"] = update_none
 }
+
