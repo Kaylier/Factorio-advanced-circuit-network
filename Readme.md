@@ -1,4 +1,4 @@
-# Factorio mod: Controlable automation
+# Factorio mod: Advanced circuit network
 
 This mod adds a new entity: the controller combinator.
 When a controller combinator is placed facing a machine, it allow the user to control the machine and to output information to the circuit network.

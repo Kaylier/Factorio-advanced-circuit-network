@@ -8,7 +8,7 @@ data:extend({
     name = "controller-combinator",
 
     --- Prototype/Entity
-    icon = "__controlable-automation__/graphics/icons/controller-combinator.png",
+    icon = "__advanced-circuit-network__/graphics/icons/controller-combinator.png",
     icon_size = 64,
     icon_mipmaps = 4,
 
@@ -181,7 +181,7 @@ data:extend({
     sprites = make_4way_animation_from_spritesheet({ layers =
     {
       {
-        filename = "__controlable-automation__/graphics/entity/controller-combinator/controller-combinator.png",
+        filename = "__advanced-circuit-network__/graphics/entity/controller-combinator/controller-combinator.png",
         width = 58,
         height = 52,
         frame_count = 1,
@@ -189,7 +189,7 @@ data:extend({
         hr_version =
         {
           scale = 0.5,
-          filename = "__controlable-automation__/graphics/entity/controller-combinator/hr-controller-combinator.png",
+          filename = "__advanced-circuit-network__/graphics/entity/controller-combinator/hr-controller-combinator.png",
           width = 114,
           height = 102,
           frame_count = 1,
@@ -197,7 +197,7 @@ data:extend({
         }
       },
       {
-        filename = "__controlable-automation__/graphics/entity/controller-combinator/controller-combinator-shadow.png",
+        filename = "__advanced-circuit-network__/graphics/entity/controller-combinator/controller-combinator-shadow.png",
         width = 50,
         height = 34,
         frame_count = 1,
@@ -206,7 +206,7 @@ data:extend({
         hr_version =
         {
           scale = 0.5,
-          filename = "__controlable-automation__/graphics/entity/controller-combinator/hr-controller-combinator-shadow.png",
+          filename = "__advanced-circuit-network__/graphics/entity/controller-combinator/hr-controller-combinator-shadow.png",
           width = 98,
           height = 66,
           frame_count = 1,

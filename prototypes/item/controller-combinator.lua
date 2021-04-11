@@ -7,7 +7,7 @@ data:extend({
     order = "c[combinators]-d[controller-combinator]",
 
     --- Prototype/Recipe
-    icon = "__controlable-automation__/graphics/icons/controller-combinator.png",
+    icon = "__advanced-circuit-network__/graphics/icons/controller-combinator.png",
     icon_size = 64,
     icon_mipmaps = 4,
 

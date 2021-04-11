@@ -3,7 +3,7 @@ data:extend({
   {
     type = "corpse",
     name = "controller-combinator-remnants",
-    icon = "__controlable-automation__/graphics/icons/controller-combinator.png",
+    icon = "__advanced-circuit-network__/graphics/icons/controller-combinator.png",
     icon_size = 64, icon_mipmaps = 4,
     flags = {"placeable-neutral", "not-on-map"},
     subgroup = "circuit-network-remnants",
@@ -17,7 +17,7 @@ data:extend({
     remove_on_tile_placement = false,
     animation = make_rotated_animation_variations_from_sheet (1,
     {
-      filename = "__controlable-automation__/graphics/entity/controller-combinator/controller-combinator-remnants.png",
+      filename = "__advanced-circuit-network__/graphics/entity/controller-combinator/controller-combinator-remnants.png",
       line_length = 1,
       width = 60,
       height = 56,
@@ -28,7 +28,7 @@ data:extend({
       shift = util.by_pixel(0, 0),
       hr_version =
       {
-        filename = "__controlable-automation__/graphics/entity/controller-combinator/hr-controller-combinator-remnants.png",
+        filename = "__advanced-circuit-network__/graphics/entity/controller-combinator/hr-controller-combinator-remnants.png",
         line_length = 1,
         width = 118,
         height = 112,

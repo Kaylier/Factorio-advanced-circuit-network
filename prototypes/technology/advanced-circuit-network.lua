@@ -7,7 +7,7 @@ data:extend({
     order = "a-d-e",
 
     --- Prototype/Technology
-    icon = "__controlable-automation__/graphics/technology/advanced-circuit-network.png",
+    icon = "__advanced-circuit-network__/graphics/technology/advanced-circuit-network.png",
     icon_size = 256,
     icon_mipmaps = 4,
 
