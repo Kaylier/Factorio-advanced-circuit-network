@@ -290,6 +290,41 @@ local function build_furnace(screen, data)
     tooltip = {"gui.read-result-description"},
     state = data.read_result
   }
+  do
+    local subframe = content_frame.add{
+      type = "flow",
+      name = "gui-controller-combinator-result-frame",
+      style = "player_input_horizontal_flow",
+      visible = data.read_result
+    }
+    subframe.style.vertical_align = "center"
+    subframe.add{
+      type = "label",
+      caption = {"gui.output-multiplier"},
+      tooltip = {"gui.output-multiplier-description"},
+      style = "bold_label"
+    }
+    local logval = data.read_result_multiplier
+    -- actual values: -1, 1, 10, 100, 1000, 10000, 100000, 1000000...
+    if logval >= 0 then
+      logval = math.log(logval, 10)
+    end
+    subframe.add{
+      type = "slider",
+      name = "gui-controller-combinator-result-multiplier",
+      elem_type = "signal",
+      minimum_value = -1,
+      maximum_value = 9,
+      value = logval,
+      discrete_slider = true
+    }
+    subframe.add{
+      type = "label",
+      name = "gui-controller-combinator-result-multiplier-label",
+      caption = data.read_result_multiplier,
+      style = "bold_label"
+    }
+  end
 
   return main_frame
 end

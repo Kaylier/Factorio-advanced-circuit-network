@@ -6,8 +6,8 @@ When a controller combinator is placed facing a machine, it allow the user to co
 Note: if several controller are on the same machine, only one effectively control it.
 
 ## Description
-### Assembling machines
-Concerns: assembling machine 1/2/3, Oil refinery, Chemical plant and Centrifuge.
+### Assembling machines and furnaces
+Concerns: assembling machine 1/2/3, Oil refinery, Chemical plant, Centrifuge and stone/steel/electric furnaces.
 
 Possible output signal:
 - Items in input, output and module slots
@@ -15,8 +15,7 @@ Possible output signal:
 - Recipe output (if random, returns the average output)
 
 Possible control options:
-- Disable crafting
-- Set recipe (recipe signal? spill items?)
+- Disable crafting/smelting
 
 ### Beacons
 Possible output signal:
@@ -24,15 +23,6 @@ Possible output signal:
 
 Possible control options:
 - Disable
-
-### Furnaces
-Possible output signal:
-- Items in input, output and module slots
-- Recipe ingredient
-- Recipe output (if random, returns the average output)
-
-Possible control options:
-- Disable smelting
 
 ### Labs
 Possible output signal:
@@ -44,7 +34,7 @@ Possible output signal:
 Possible control options:
 - Disable
 
-Note: In case of several forces on the map, the last user of the controller defines which force is considered.
+Note: In case of several forces on the map, the owner of the lab is used. (it can be used to spy on others technologies)
 
 ### Nuclear reactor
 Possible output signal:
@@ -74,7 +64,7 @@ Available languages: English, French
 
 
 ## Known bugs
-- signal-everything, signal-anything and signal-each resets to no signal. These are invalid signals and shouldn't show, but I don't know how to hide them.
+- signal-everything, signal-anything and signal-each resets to no signal. These are invalid signals and shouldn't be shown, but I don't know how to hide them.
 
 
 ## License
