@@ -1,6 +1,106 @@
 
+
+local function init_circuit_buffer(data)
+  local circuit_buffer = data.controller.get_control_behavior()
+
+  for idx = 1,circuit_buffer.signals_count do
+    circuit_buffer.set_signal(idx, nil)
+  end
+
+  return circuit_buffer
+end
+
+
+local function eval_signal_comp_txt(data, sig, cmp, txt)
+  local v1 = 0
+  if sig then
+    v1 = data.controller.get_merged_signal(sig)
+  end
+  local v2 = tonumber(txt) or 0
+
+  if cmp == 1 then
+    return v1 > v2
+  elseif cmp == 2 then
+    return v1 < v2
+  elseif cmp == 3 then
+    return v1 == v2
+  elseif cmp == 4 then
+    return v1 >= v2
+  elseif cmp == 5 then
+    return v1 <= v2
+  elseif cmp == 6 then
+    return v1 ~= v2
+  end
+end
+
+
+local function read_inventories(data, circuit_buffer, inventories)
+  if not data.read_inventory then
+    return 1
+  end
+  local idx = 1
+  for i, inventory_name in pairs(inventories) do
+    local inventory = data.target.get_inventory(inventory_name)
+    if inventory then
+      local content = inventory.get_contents()
+      for k,v in pairs(content) do
+        circuit_buffer.set_signal(idx, {signal = {type = "item", name = k}, count = v})
+        idx = idx + 1
+      end
+    end
+  end
+  return idx
+end
+
+
 local function update_none(data)
   return
+end
+
+
+local function update_assembling_machine(data)
+  assert(data.type == "assembling-machine")
+  assert(data.target.type == "assembling-machine")
+  assert(data.control_enabled ~= nil)
+  assert(data.control_enabled_cond2 ~= nil)
+  assert(data.control_enabled_cond3 ~= nil)
+  assert(data.read_inventory ~= nil)
+  assert(data.read_ingredients ~= nil)
+  assert(data.read_result ~= nil)
+
+  local circuit_buffer = init_circuit_buffer(data)
+  local circuit_idx = read_inventories(data, circuit_buffer, {
+      defines.inventory.assembling_machine_input,
+      defines.inventory.assembling_machine_output,
+      defines.inventory.assembling_machine_modules
+  })
+  
+  local recipe = data.target.get_recipe()
+  if data.read_ingredients and recipe then
+    local ingredients = recipe.ingredients
+    for i,ing in pairs(ingredients) do
+      circuit_buffer.set_signal(circuit_idx, {signal = {type = ing.type, name = ing.name}, count = ing.amount})
+      circuit_idx = circuit_idx + 1
+    end
+  end
+
+  if data.read_result and recipe then
+    local results = recipe.products
+    for i, p in pairs(results) do
+      local prob = p.probability or 1
+      local amount = p.amount
+      if amount == nil then
+        amount = ((p.amount_min or 0) + (p.amount_max or 1))/2
+      end
+      amount = amount * prob * data.read_result_multiplier
+
+      circuit_buffer.set_signal(circuit_idx, {signal = {type = p.type, name = p.name}, count = amount})
+      circuit_idx = circuit_idx + 1
+    end
+
+  end
+
+  data.target.active = (not data.control_enabled) or eval_signal_comp_txt(data, data.control_enabled_cond1, data.control_enabled_cond2, data.control_enabled_cond3)
 end
 
 
@@ -12,57 +112,107 @@ local function update_beacon(data)
   assert(data.control_enabled_cond3 ~= nil)
   assert(data.read_inventory ~= nil)
 
-  -- circuit output reservations:
-  -- 1+: inventory
+  local circuit_buffer = init_circuit_buffer(data)
+  local circuit_idx = read_inventories(data, circuit_buffer, {
+      defines.inventory.beacon_modules
+  })
 
-  -- Reset circuit output
-  local circuit_buffer = data.controller.get_control_behavior()
-  for idx = 1,circuit_buffer.signals_count do
-    circuit_buffer.set_signal(idx, nil)
+  data.target.active = (not data.control_enabled) or eval_signal_comp_txt(data, data.control_enabled_cond1, data.control_enabled_cond2, data.control_enabled_cond3)
+end
+
+
+local function update_furnace(data)
+  assert(data.type == "furnace")
+  assert(data.target.type == "furnace")
+  assert(data.control_enabled ~= nil)
+  assert(data.control_enabled_cond2 ~= nil)
+  assert(data.control_enabled_cond3 ~= nil)
+  assert(data.read_inventory ~= nil)
+  assert(data.read_ingredients ~= nil)
+  assert(data.read_result ~= nil)
+
+  local circuit_buffer = init_circuit_buffer(data)
+  local circuit_idx = read_inventories(data, circuit_buffer, {
+      defines.inventory.furnace_source,
+      defines.inventory.furnace_result,
+      defines.inventory.furnace_modules
+  })
+
+  local recipe = data.target.get_recipe() or data.target.previous_recipe
+  if data.read_ingredients and recipe then
+    local ingredients = recipe.ingredients
+    for i,ing in pairs(ingredients) do
+      circuit_buffer.set_signal(circuit_idx, {signal = {type = ing.type, name = ing.name}, count = ing.amount})
+      circuit_idx = circuit_idx + 1
+    end
   end
 
-  if data.read_inventory then
-    local idx = 1
-    local inventory = data.target.get_inventory(defines.inventory.beacon_modules)
-    if inventory then
-      local content = inventory.get_contents()
-      for k,v in pairs(content) do
-        circuit_buffer.set_signal(idx, {signal = {type = "item", name = k}, count = v})
-        idx = idx + 1
+  if data.read_result and recipe then
+    local results = recipe.products
+    for i, p in pairs(results) do
+      local prob = p.probability or 1
+      local amount = p.amount
+      if amount == nil then
+        amount = ((p.amount_min or 0) + (p.amount_max or 1))/2
       end
+      amount = amount * prob * data.read_result_multiplier
+
+      circuit_buffer.set_signal(circuit_idx, {signal = {type = p.type, name = p.name}, count = amount})
+      circuit_idx = circuit_idx + 1
+    end
+
+  end
+
+  data.target.active = (not data.control_enabled) or eval_signal_comp_txt(data, data.control_enabled_cond1, data.control_enabled_cond2, data.control_enabled_cond3)
+end
+
+
+local function update_lab(data)
+  assert(data.type == "lab")
+  assert(data.target.type == "lab")
+  assert(data.control_enabled ~= nil)
+  assert(data.control_enabled_cond2 ~= nil)
+  assert(data.control_enabled_cond3 ~= nil)
+  assert(data.read_inventory ~= nil)
+
+  local circuit_buffer = init_circuit_buffer(data)
+  local circuit_idx = read_inventories(data, circuit_buffer, {
+      defines.inventory.lab_input,
+      defines.inventory.lab_modules
+  })
+
+  local force = data.target.force
+
+  if data.read_tech and force.current_research then
+    local current_research = force.current_research
+    local multiplier = current_research.research_unit_count
+    local ingredients = current_research.research_unit_ingredients
+    for i,ing in pairs(ingredients) do
+      circuit_buffer.set_signal(circuit_idx, {signal = {type = ing.type, name = ing.name}, count = multiplier * ing.amount})
+      circuit_idx = circuit_idx + 1
+    end
+
+    if data.read_tech_time_signal then
+      circuit_buffer.set_signal(circuit_idx, {signal = data.read_tech_time_signal, count = multiplier * current_research.research_unit_energy/60})
+      circuit_idx = circuit_idx + 1
     end
   end
 
-  local res = true
-  if data.control_enabled then
-    local cond1 = 0
-    local cond2 = 2
-    local cond3 = 0
-    if data.control_enabled_cond1 then
-      cond1 = data.controller.get_merged_signal(data.control_enabled_cond1)
-    end
-    if data.control_enabled_cond2 then
-      cond2 = data.control_enabled_cond2
-    end
-    if data.control_enabled_cond3 then
-      cond3 = tonumber(data.control_enabled_cond3)
-    end
-    if cond2 == 1 then
-      res = (cond1 > cond3)
-    elseif cond2 == 2 then
-      res = (cond1 < cond3)
-    elseif cond2 == 3 then
-      res = (cond1 == cond3)
-    elseif cond2 == 4 then
-      res = (cond1 >= cond3)
-    elseif cond2 == 5 then
-      res = (cond1 <= cond3)
-    elseif cond2 == 6 then
-      res = (cond1 ~= cond3)
-    end
+  if data.read_tech_progress and data.read_tech_progress_signal then
+    local progress = tonumber(force.research_progress*100)
+    circuit_buffer.set_signal(circuit_idx, {signal = data.read_tech_progress_signal, count = progress})
+    circuit_idx = circuit_idx + 1
   end
-  data.target.active = res
 
+  if data.read_tech_completed and data.read_tech_completed_signal and data.read_tech_completed_state then
+    circuit_buffer.set_signal(circuit_idx, {signal = data.read_tech_completed_signal, count = 1})
+    circuit_idx = circuit_idx + 1
+
+    data.read_tech_completed_state = false
+  end
+
+  
+  data.target.active = (not data.control_enabled) or eval_signal_comp_txt(data, data.control_enabled_cond1, data.control_enabled_cond2, data.control_enabled_cond3)
 end
 
 
@@ -75,65 +225,22 @@ local function update_reactor(data)
   assert(data.read_inventory ~= nil)
   assert(data.read_temperature ~= nil)
 
-  -- circuit output reservations:
-  -- 1: temperature
-  -- 2+: inventory
-
-  -- Reset circuit output
-  local circuit_buffer = data.controller.get_control_behavior()
-  for idx = 1,circuit_buffer.signals_count do
-    circuit_buffer.set_signal(idx, nil)
-  end
-
-  if data.read_inventory then
-    local idx = 2
-    local content = data.target.get_fuel_inventory().get_contents()
-    for k,v in pairs(content) do
-      circuit_buffer.set_signal(idx, {signal = {type = "item", name = k}, count = v})
-      idx = idx + 1
-    end
-    local content = data.target.get_burnt_result_inventory().get_contents()
-    for k,v in pairs(content) do
-      circuit_buffer.set_signal(idx, {signal = {type = "item", name = k}, count = v})
-      idx = idx + 1
-    end
-    assert(idx <= 4)
-  end
-
+  local circuit_buffer = init_circuit_buffer(data)
+  local circuit_idx = read_inventories(data, circuit_buffer, {
+      defines.inventory.fuel,
+      defines.inventory.burnt_result
+  })
+  
   if data.read_temperature and data.read_temperature_signal then
     local temperature = math.floor(data.target.temperature)
-    circuit_buffer.set_signal(1, {signal = data.read_temperature_signal, count = temperature})
+    circuit_buffer.set_signal(circuit_idx, {signal = data.read_temperature_signal, count = temperature})
+    circuit_idx = circuit_idx + 1
   end
 
   local res = true
   -- TODO: Find a better way to prevent stopping when it's currently burning
   if data.target.burner.remaining_burning_fuel <= 2000000/3 and data.control_enabled then
-
-    local cond1 = 0
-    local cond2 = 2
-    local cond3 = 0
-    if data.control_enabled_cond1 then
-      cond1 = data.controller.get_merged_signal(data.control_enabled_cond1)
-    end
-    if data.control_enabled_cond2 then
-      cond2 = data.control_enabled_cond2
-    end
-    if data.control_enabled_cond3 then
-      cond3 = tonumber(data.control_enabled_cond3)
-    end
-    if cond2 == 1 then
-      res = (cond1 > cond3)
-    elseif cond2 == 2 then
-      res = (cond1 < cond3)
-    elseif cond2 == 3 then
-      res = (cond1 == cond3)
-    elseif cond2 == 4 then
-      res = (cond1 >= cond3)
-    elseif cond2 == 5 then
-      res = (cond1 <= cond3)
-    elseif cond2 == 6 then
-      res = (cond1 ~= cond3)
-    end
+    res = eval_signal_comp_txt(data, data.control_enabled_cond1, data.control_enabled_cond2, data.control_enabled_cond3)
   end
   data.target.active = res
 end
@@ -153,41 +260,19 @@ local function update_rocket_silo(data)
   assert(data.read_rocket_launch ~= nil)
   assert(data.read_rocket_launch_mode ~= nil)
 
-  -- circuit output reservations:
-  -- 1: rocket progress
-  -- 2: rocket progress
-  -- 3+: inventory
-
-  -- Reset circuit output
-  local circuit_buffer = data.controller.get_control_behavior()
-  for idx = 1,circuit_buffer.signals_count do
-    circuit_buffer.set_signal(idx, nil)
-  end
-
-  if data.read_inventory then
-    local idx = 3
-    local inventories = {
+  local circuit_buffer = init_circuit_buffer(data)
+  local circuit_idx = read_inventories(data, circuit_buffer, {
       defines.inventory.assembling_machine_input,
       defines.inventory.assembling_machine_output,
       defines.inventory.assembling_machine_modules,
       defines.inventory.rocket_silo_rocket,
-      defines.inventory.rocket_silo_result,
-    }
-    for i,inventory_name in pairs(inventories) do
-      local inventory = data.target.get_inventory(inventory_name)
-      if inventory then
-        local content = inventory.get_contents()
-        for k,v in pairs(content) do
-          circuit_buffer.set_signal(idx, {signal = {type = "item", name = k}, count = v})
-          idx = idx + 1
-        end
-      end
-    end
-  end
-
+      defines.inventory.rocket_silo_result
+  })
+  
   if data.read_rocket_progress and data.read_rocket_progress_signal then
     local progress = data.target.rocket_parts
-    circuit_buffer.set_signal(1, {signal = data.read_rocket_progress_signal, count = progress})
+    circuit_buffer.set_signal(circuit_idx, {signal = data.read_rocket_progress_signal, count = progress})
+    circuit_idx = circuit_idx + 1
   end
 
   if data.read_rocket_launch and data.read_rocket_launch_state then
@@ -197,82 +282,27 @@ local function update_rocket_silo(data)
       output = data.target.products_finished
     end
 
-    circuit_buffer.set_signal(2, {signal = data.read_rocket_launch_signal, count = output})
+    circuit_buffer.set_signal(circuit_idx, {signal = data.read_rocket_launch_signal, count = output})
+    circuit_idx = circuit_idx + 1
 
     if data.read_rocket_launch_mode == true then -- unique mode
       data.read_rocket_launch_state = false
     end
   end
 
-  local res = true
-  if data.control_enabled then
-    local cond1 = 0
-    local cond2 = 2
-    local cond3 = 0
-    if data.control_enabled_cond1 then
-      cond1 = data.controller.get_merged_signal(data.control_enabled_cond1)
-    end
-    if data.control_enabled_cond2 then
-      cond2 = data.control_enabled_cond2
-    end
-    if data.control_enabled_cond3 then
-      cond3 = tonumber(data.control_enabled_cond3)
-    end
-    if cond2 == 1 then
-      res = (cond1 > cond3)
-    elseif cond2 == 2 then
-      res = (cond1 < cond3)
-    elseif cond2 == 3 then
-      res = (cond1 == cond3)
-    elseif cond2 == 4 then
-      res = (cond1 >= cond3)
-    elseif cond2 == 5 then
-      res = (cond1 <= cond3)
-    elseif cond2 == 6 then
-      res = (cond1 ~= cond3)
-    end
-  end
-  data.target.active = res
+  data.target.active = (not data.control_enabled) or eval_signal_comp_txt(data, data.control_enabled_cond1, data.control_enabled_cond2, data.control_enabled_cond3)
 
-  if data.control_launch then
-    local res = false
-    local cond1 = 0
-    local cond2 = 1
-    local cond3 = 0
-    if data.control_launch_cond1 then
-      cond1 = data.controller.get_merged_signal(data.control_launch_cond1)
-    end
-    if data.control_launch_cond2 then
-      cond2 = data.control_launch_cond2
-    end
-    if data.control_launch_cond3 then
-      cond3 = tonumber(data.control_launch_cond3)
-    end
-    if cond2 == 1 then
-      res = (cond1 > cond3)
-    elseif cond2 == 2 then
-      res = (cond1 < cond3)
-    elseif cond2 == 3 then
-      res = (cond1 == cond3)
-    elseif cond2 == 4 then
-      res = (cond1 >= cond3)
-    elseif cond2 == 5 then
-      res = (cond1 <= cond3)
-    elseif cond2 == 6 then
-      res = (cond1 ~= cond3)
-    end
-    if res then
-      data.target.launch_rocket()
-    end
+  if data.control_launch and eval_signal_comp_txt(data, data.control_launch_cond1, data.control_launch_cond2, data.control_launch_cond3) then
+    data.target.launch_rocket()
   end
 end
 
 
 return {
-  ["assembling-machine"] = update_none,
+  ["assembling-machine"] = update_assembling_machine,
   ["beacon"] = update_beacon,
-  ["furnace"] = update_none,
-  ["lab"] = update_none,
+  ["furnace"] = update_furnace,
+  ["lab"] = update_lab,
   ["rocket-silo"] = update_rocket_silo,
   ["reactor"] = update_reactor,
   ["none"] = update_none

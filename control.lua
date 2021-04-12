@@ -59,14 +59,24 @@ local function init_controller(entity)
     control_enabled_cond2 = 2,
     control_enabled_cond3 = "0",
     control_launch = false,
-    control_launch_cond1 = { type = "item", name = "satellite"},
+    control_launch_cond1 = {type = "item", name = "satellite"},
     control_launch_cond2 = 1,
     control_launch_cond3 = "0",
     read_inventory = false,
     read_temperature = false,
     read_temperature_signal = {type = "virtual", name = "signal-T"},
+    read_ingredients = false,
+    read_result = false,
+    read_result_multiplier = 1,
+    read_tech = false,
+    read_tech_time_signal = {type = "virtual", name = "signal-T"},
+    read_tech_progress = false,
+    read_tech_progress_signal = {type = "virtual", name = "signal-P"},
+    read_tech_completed = false,
+    read_tech_completed_state = false,
+    read_tech_completed_signal = {type = "virtual", name = "signal-C"},
     read_rocket_progress = false,
-    read_rocket_progress_signal = { type = "item", name = "rocket-part"},
+    read_rocket_progress_signal = {type = "item", name = "rocket-part"},
     read_rocket_launch = false,
     read_rocket_launch_signal = {type = "virtual", name = "signal-L"},
     read_rocket_launch_mode = true, -- true for unique, false for hold
@@ -283,6 +293,11 @@ function(event)
     event.element.parent["gui-controller-combinator-enable-endline"].visible = event.element.state
   elseif event.element.name == "gui-controller-combinator-inventory" then
     global.controllers[opened_controller_id].read_inventory = event.element.state
+  elseif event.element.name == "gui-controller-combinator-ingredients" then
+    global.controllers[opened_controller_id].read_ingredients = event.element.state
+  elseif event.element.name == "gui-controller-combinator-result" then
+    global.controllers[opened_controller_id].read_result = event.element.state
+    event.element.parent["gui-controller-combinator-result-frame"].visible = event.element.state
   elseif event.element.name == "gui-controller-combinator-temperature" then
     global.controllers[opened_controller_id].read_temperature = event.element.state
     event.element.parent["gui-controller-combinator-temperature-frame"].visible = event.element.state
@@ -310,6 +325,17 @@ function(event)
   elseif event.element.name == "gui-controller-combinator-rocket-launch-count" then
     global.controllers[opened_controller_id].read_rocket_launch_output_mode = not event.element.state
     event.element.parent["gui-controller-combinator-rocket-launch-one"].state = not event.element.state
+  elseif event.element.name == "gui-controller-combinator-tech" then
+    global.controllers[opened_controller_id].read_tech = event.element.state
+    event.element.parent["gui-controller-combinator-tech-frame"].visible = event.element.state
+    event.element.parent["gui-controller-combinator-tech-endline"].visible = event.element.state
+  elseif event.element.name == "gui-controller-combinator-tech-progress" then
+    global.controllers[opened_controller_id].read_tech_progress = event.element.state
+    event.element.parent["gui-controller-combinator-tech-progress-frame"].visible = event.element.state
+    event.element.parent["gui-controller-combinator-tech-progress-endline"].visible = event.element.state
+  elseif event.element.name == "gui-controller-combinator-tech-completed" then
+    global.controllers[opened_controller_id].read_tech_completed = event.element.state
+    event.element.parent["gui-controller-combinator-tech-completed-frame"].visible = event.element.state
   end
 end)
 
@@ -332,6 +358,17 @@ function(event)
   ---
   -- choose-elem-button
   ---
+
+  if event.element.elem_value.name == "signal-everything" then
+    event.element.elem_value = nil
+  elseif event.element.elem_value.name == "signal-anything" then
+    event.element.elem_value = nil
+  elseif event.element.elem_value.name == "signal-each" then
+    event.element.elem_value = nil
+  elseif event.element.elem_value.name == nil then
+    event.element.elem_value = nil
+  end
+
   if event.element.name == "gui-controller-combinator-enable-cond1" then
     global.controllers[opened_controller_id].control_enabled_cond1 = event.element.elem_value
   elseif event.element.name == "gui-controller-combinator-temperature-signal" then
@@ -342,6 +379,12 @@ function(event)
     global.controllers[opened_controller_id].control_launch_cond1 = event.element.elem_value
   elseif event.element.name == "gui-controller-combinator-rocket-launch-signal" then
     global.controllers[opened_controller_id].read_rocket_launch_signal = event.element.elem_value
+  elseif event.element.name == "gui-controller-combinator-tech-time-signal" then
+    global.controllers[opened_controller_id].read_tech_time_signal = event.element.elem_value
+  elseif event.element.name == "gui-controller-combinator-tech-progress-signal" then
+    global.controllers[opened_controller_id].read_tech_progress_signal = event.element.elem_value
+  elseif event.element.name == "gui-controller-combinator-tech-completed-signal" then
+    global.controllers[opened_controller_id].read_tech_completed_signal = event.element.elem_value
   end
   --[[
   elseif event.element.name == "gui-controller-combinator-enable-cond3" then
@@ -395,6 +438,14 @@ function(event)
   ---
   -- slider
   ---
+  if event.element.name == "gui-controller-combinator-result-multiplier" then
+    local realval = event.element.slider_value
+    if realval >= 0 then
+      realval = math.pow(10, realval)
+    end
+    global.controllers[opened_controller_id].read_result_multiplier = realval
+    event.element.parent["gui-controller-combinator-result-multiplier-label"].caption = realval
+  end
 end)
 
 
@@ -415,4 +466,14 @@ function(event)
     end
   end
 end)
+
+script.on_event(defines.events.on_research_finished,
+function(event)
+  for id, data in pairs(global.controllers) do
+    if data.type == "lab" then
+      data.read_tech_completed_state = true
+    end
+  end
+end)
+
 

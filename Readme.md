@@ -12,7 +12,7 @@ Concerns: assembling machine 1/2/3, Oil refinery, Chemical plant and Centrifuge.
 Possible output signal:
 - Items in input, output and module slots
 - Recipe ingredients
-- Recipe output (if random, returns the average output rounded)
+- Recipe output (if random, returns the average output)
 
 Possible control options:
 - Disable crafting
@@ -29,7 +29,7 @@ Possible control options:
 Possible output signal:
 - Items in input, output and module slots
 - Recipe ingredient
-- Recipe output (if random, returns the average output rounded)
+- Recipe output (if random, returns the average output)
 
 Possible control options:
 - Disable smelting
@@ -37,13 +37,14 @@ Possible control options:
 ### Labs
 Possible output signal:
 - Items in input and module slots
-- Technology science pack requirement
-- Technology time requirement
+- Technology science pack and time requirement
 - Technology progress
 - Pulse when a technology is completed
 
 Possible control options:
 - Disable
+
+Note: In case of several forces on the map, the last user of the controller defines which force is considered.
 
 ### Nuclear reactor
 Possible output signal:
@@ -70,6 +71,11 @@ Note 2: if you want a standalone controller, activating the silo on a condition 
 
 ## Localization
 Available languages: English, French
+
+
+## Known bugs
+- signal-everything, signal-anything and signal-each resets to no signal. These are invalid signals and shouldn't show, but I don't know how to hide them.
+
 
 ## License
 All graphics are derived from Factorio assets, Wube Software Ltd. retains all rights and license to these assets.
