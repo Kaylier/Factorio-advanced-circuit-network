@@ -1,5 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.0.2-beta
+Date: 2021.04.13
+  Optimisations:
+    - Fix major performance bottleneck
+    - Add possibility to change update interval in runtime settings
+
+---------------------------------------------------------------------------------------------------
 Version: 0.0.1-beta
 Date: 2021.04.12
   Info:
-    -Initial Release
+    -First beta release
