@@ -206,7 +206,7 @@ function(event)
 end)
 
 
-script.on_nth_tick(1, function()
+local function on_nth_tick()
   for id, data in pairs(global.controllers) do
     local controller = data.controller
     if controller.valid then
@@ -220,6 +220,12 @@ script.on_nth_tick(1, function()
       destroy_controller(id)
     end
   end
+end
+script.on_nth_tick(settings.global["advanced-circuit-network-update-interval"].value, on_nth_tick)
+script.on_event(defines.events.on_runtime_mod_setting_changed,
+function()
+  script.on_nth_tick(nil)
+  script.on_nth_tick(settings.global["advanced-circuit-network-update-interval"].value, on_nth_tick)
 end)
 
 
