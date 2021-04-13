@@ -3,9 +3,8 @@
 local function init_circuit_buffer(data)
   local circuit_buffer = data.controller.get_control_behavior()
 
-  for idx = 1,circuit_buffer.signals_count do
-    circuit_buffer.set_signal(idx, nil)
-  end
+  circuit_buffer.parameters = nil
+  circuit_buffer.enabled = true
 
   return circuit_buffer
 end
@@ -58,6 +57,11 @@ local function update_none(data)
 end
 
 
+local assembling_machine_inventories = {
+  defines.inventory.assembling_machine_input,
+  defines.inventory.assembling_machine_output,
+  defines.inventory.assembling_machine_modules
+}
 local function update_assembling_machine(data)
   assert(data.type == "assembling-machine")
   assert(data.target.type == "assembling-machine")
@@ -69,11 +73,7 @@ local function update_assembling_machine(data)
   assert(data.read_result ~= nil)
 
   local circuit_buffer = init_circuit_buffer(data)
-  local circuit_idx = read_inventories(data, circuit_buffer, {
-      defines.inventory.assembling_machine_input,
-      defines.inventory.assembling_machine_output,
-      defines.inventory.assembling_machine_modules
-  })
+  local circuit_idx = read_inventories(data, circuit_buffer, assembling_machine_inventories)
   
   local recipe = data.target.get_recipe()
   if data.read_ingredients and recipe then
@@ -104,6 +104,9 @@ local function update_assembling_machine(data)
 end
 
 
+local beacon_inventories = {
+  defines.inventory.beacon_modules
+}
 local function update_beacon(data)
   assert(data.type == "beacon")
   assert(data.target.type == "beacon")
@@ -113,14 +116,17 @@ local function update_beacon(data)
   assert(data.read_inventory ~= nil)
 
   local circuit_buffer = init_circuit_buffer(data)
-  local circuit_idx = read_inventories(data, circuit_buffer, {
-      defines.inventory.beacon_modules
-  })
+  local circuit_idx = read_inventories(data, circuit_buffer, beacon_inventories)
 
   data.target.active = (not data.control_enabled) or eval_signal_comp_txt(data, data.control_enabled_cond1, data.control_enabled_cond2, data.control_enabled_cond3)
 end
 
 
+local furnace_inventories = {
+  defines.inventory.furnace_source,
+  defines.inventory.furnace_result,
+  defines.inventory.furnace_modules
+}
 local function update_furnace(data)
   assert(data.type == "furnace")
   assert(data.target.type == "furnace")
@@ -132,11 +138,7 @@ local function update_furnace(data)
   assert(data.read_result ~= nil)
 
   local circuit_buffer = init_circuit_buffer(data)
-  local circuit_idx = read_inventories(data, circuit_buffer, {
-      defines.inventory.furnace_source,
-      defines.inventory.furnace_result,
-      defines.inventory.furnace_modules
-  })
+  local circuit_idx = read_inventories(data, circuit_buffer, furnace_inventories)
 
   local recipe = data.target.get_recipe() or data.target.previous_recipe
   if data.read_ingredients and recipe then
@@ -167,6 +169,10 @@ local function update_furnace(data)
 end
 
 
+local lab_inventories = {
+  defines.inventory.lab_input,
+  defines.inventory.lab_modules
+}
 local function update_lab(data)
   assert(data.type == "lab")
   assert(data.target.type == "lab")
@@ -176,10 +182,7 @@ local function update_lab(data)
   assert(data.read_inventory ~= nil)
 
   local circuit_buffer = init_circuit_buffer(data)
-  local circuit_idx = read_inventories(data, circuit_buffer, {
-      defines.inventory.lab_input,
-      defines.inventory.lab_modules
-  })
+  local circuit_idx = read_inventories(data, circuit_buffer, lab_inventories)
 
   local force = data.target.force
 
@@ -216,6 +219,10 @@ local function update_lab(data)
 end
 
 
+local reactor_inventories = {
+  defines.inventory.fuel,
+  defines.inventory.burnt_result
+}
 local function update_reactor(data)
   assert(data.type == "reactor")
   assert(data.target.type == "reactor")
@@ -226,10 +233,7 @@ local function update_reactor(data)
   assert(data.read_temperature ~= nil)
 
   local circuit_buffer = init_circuit_buffer(data)
-  local circuit_idx = read_inventories(data, circuit_buffer, {
-      defines.inventory.fuel,
-      defines.inventory.burnt_result
-  })
+  local circuit_idx = read_inventories(data, circuit_buffer, reactor_inventories)
   
   if data.read_temperature and data.read_temperature_signal then
     local temperature = math.floor(data.target.temperature)
@@ -246,6 +250,13 @@ local function update_reactor(data)
 end
 
 
+local rocket_silo_inventories = {
+  defines.inventory.assembling_machine_input,
+  defines.inventory.assembling_machine_output,
+  defines.inventory.assembling_machine_modules,
+  defines.inventory.rocket_silo_rocket,
+  defines.inventory.rocket_silo_result
+}
 local function update_rocket_silo(data)
   assert(data.type == "rocket-silo")
   assert(data.target.type == "rocket-silo")
@@ -261,13 +272,7 @@ local function update_rocket_silo(data)
   assert(data.read_rocket_launch_mode ~= nil)
 
   local circuit_buffer = init_circuit_buffer(data)
-  local circuit_idx = read_inventories(data, circuit_buffer, {
-      defines.inventory.assembling_machine_input,
-      defines.inventory.assembling_machine_output,
-      defines.inventory.assembling_machine_modules,
-      defines.inventory.rocket_silo_rocket,
-      defines.inventory.rocket_silo_result
-  })
+  local circuit_idx = read_inventories(data, circuit_buffer, rocket_silo_inventories)
   
   if data.read_rocket_progress and data.read_rocket_progress_signal then
     local progress = data.target.rocket_parts

@@ -19,7 +19,7 @@ DIRS += scripts
 VERSION = $(shell awk "NR==2" changelog.txt | cut -d ' ' -f 2)
 
 all:
-	git tag v${VERSION}
+	git tag v${VERSION} -m "Release v${VERSION}"
 	zip -r advanced-circuit-network_${VERSION}.zip ${FILES} ${DIRS}
 
 clean:
